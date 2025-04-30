@@ -30,7 +30,8 @@ const Sidebar = () => {
       icon: <Users size={18} />,
       children: [
         { id: 'clients', title: 'Clients', path: '/tiers/clients' },
-        { id: 'fournisseurs', title: 'Fournisseurs', path: '/tiers/fournisseurs' }
+        { id: 'fournisseurs', title: 'Fournisseurs', path: '/tiers/fournisseurs' },
+        { id: 'ajouter-tier', title: 'Ajouter un tier', path: '/tiers/ajouter' }
       ]
     },
     {
@@ -94,12 +95,7 @@ const Sidebar = () => {
 
   return (
     <aside className="w-64 bg-white border-r border-gray-200 p-4 h-[calc(100vh-64px-56px)]">
-      <div className="mb-6">
-        <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3">
-          Menu principal
-        </h3>
-        <MultiLevelMenu items={menuItems} />
-      </div>
+      <MultiLevelMenu items={menuItems} />
     </aside>
   );
 };
