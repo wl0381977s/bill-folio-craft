@@ -1,12 +1,21 @@
+
 import React, { useState } from 'react';
 import Layout from '@/components/Layout';
 import ProductCard from '@/components/ProductCard';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Search, SlidersHorizontal, ShoppingCart } from 'lucide-react';
+import { Search, SlidersHorizontal, ShoppingCart, FilterX, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { 
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Slider
+} from "@/components/ui/slider";
 
 // Mock data for demonstration
 const products = [
@@ -69,15 +78,38 @@ const products = [
 const ProduitsListePage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [priceRange, setPriceRange] = useState([0, 1500]);
+  const [stockFilter, setStockFilter] = useState('all'); // 'all', 'inStock', 'lowStock'
+  const [activeFilters, setActiveFilters] = useState(0);
 
   const filteredProducts = products.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
                          product.reference.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === 'all' || product.category === selectedCategory;
-    return matchesSearch && matchesCategory;
+    const matchesPrice = product.price >= priceRange[0] && product.price <= priceRange[1];
+    const matchesStock = stockFilter === 'all' || 
+                         (stockFilter === 'inStock' && product.stock > 5) ||
+                         (stockFilter === 'lowStock' && product.stock <= 5);
+
+    return matchesSearch && matchesCategory && matchesPrice && matchesStock;
   });
 
   const categories = ['all', ...new Set(products.map(product => product.category))];
+
+  // Calculate active filters
+  React.useEffect(() => {
+    let count = 0;
+    if (selectedCategory !== 'all') count++;
+    if (stockFilter !== 'all') count++;
+    if (priceRange[0] > 0 || priceRange[1] < 1500) count++;
+    setActiveFilters(count);
+  }, [selectedCategory, stockFilter, priceRange]);
+
+  const resetFilters = () => {
+    setSelectedCategory('all');
+    setStockFilter('all');
+    setPriceRange([0, 1500]);
+  };
 
   return (
     <Layout>
@@ -112,10 +144,63 @@ const ProduitsListePage = () => {
                 </SelectContent>
               </Select>
             </div>
-            <Button variant="outline" className="md:w-auto">
-              <SlidersHorizontal className="h-4 w-4 mr-2" />
-              Filtres
-            </Button>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="md:w-auto relative">
+                  <SlidersHorizontal className="h-4 w-4 mr-2" />
+                  Filtres
+                  {activeFilters > 0 && (
+                    <Badge className="ml-2 h-5 w-5 p-0 flex items-center justify-center rounded-full">
+                      {activeFilters}
+                    </Badge>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80">
+                <div className="space-y-4">
+                  <h4 className="font-medium mb-2 flex items-center justify-between">
+                    Filtres avancés
+                    <Button onClick={resetFilters} variant="ghost" size="sm" className="h-8 flex items-center">
+                      <FilterX className="h-4 w-4 mr-2" />
+                      Réinitialiser
+                    </Button>
+                  </h4>
+
+                  <div className="space-y-2">
+                    <h5 className="text-sm font-medium">Prix</h5>
+                    <Slider
+                      defaultValue={[0, 1500]}
+                      max={1500}
+                      step={10}
+                      value={priceRange}
+                      onValueChange={setPriceRange}
+                      className="mt-2"
+                    />
+                    <div className="flex items-center justify-between mt-1">
+                      <span className="text-xs">{priceRange[0]} €</span>
+                      <span className="text-xs">{priceRange[1]} €</span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <h5 className="text-sm font-medium">État du stock</h5>
+                    <Select
+                      value={stockFilter}
+                      onValueChange={setStockFilter}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="État du stock" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Tous les produits</SelectItem>
+                        <SelectItem value="inStock">En stock</SelectItem>
+                        <SelectItem value="lowStock">Stock bas</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
           </div>
         </div>
 
