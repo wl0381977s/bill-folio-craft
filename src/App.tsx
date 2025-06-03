@@ -16,6 +16,7 @@ import POSPage from "./pages/POSPage";
 import TransfertsPage from "./pages/TransfertsPage";
 import ProduitsListePage from "./pages/ProduitsListePage";
 import CreateInvoicePage from "./pages/CreateInvoicePage";
+import AuthPage from "./pages/AuthPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,6 +29,7 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
+          <Route path="/auth" element={<AuthPage />} />
           <Route path="/bons-reception" element={<BonsReception />} />
           <Route path="/bons-achat" element={<BonsAchat />} />
           <Route path="/tiers/clients" element={<TiersPage />} />
