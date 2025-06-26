@@ -1,8 +1,11 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { PlusCircle, Tag, Edit, Trash } from 'lucide-react';
 import { Famille } from '@/types';
 
@@ -15,6 +18,19 @@ const familles: Famille[] = [
 ];
 
 const FamillesList = () => {
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [nouvelleFamille, setNouvelleFamille] = useState({
+    code: '',
+    name: '',
+    description: ''
+  });
+
+  const handleAjouterFamille = () => {
+    console.log('Nouvelle famille ajoutée:', nouvelleFamille);
+    setIsDialogOpen(false);
+    setNouvelleFamille({ code: '', name: '', description: '' });
+  };
+
   return (
     <Card>
       <CardHeader className="bg-white flex justify-between items-center">
@@ -22,10 +38,56 @@ const FamillesList = () => {
           <Tag className="h-5 w-5 mr-2 text-primary" />
           <CardTitle className="text-lg font-medium">Familles de produits</CardTitle>
         </div>
-        <Button size="sm" className="bg-primary hover:bg-primary/90">
-          <PlusCircle className="h-4 w-4 mr-2" />
-          Ajouter une famille
-        </Button>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogTrigger asChild>
+            <Button size="sm" className="bg-primary hover:bg-primary/90">
+              <PlusCircle className="h-4 w-4 mr-2" />
+              Ajouter une famille
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Nouvelle Famille de Produits</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="code">Code Famille</Label>
+                <Input 
+                  id="code" 
+                  placeholder="FAM005"
+                  value={nouvelleFamille.code}
+                  onChange={(e) => setNouvelleFamille({...nouvelleFamille, code: e.target.value})}
+                />
+              </div>
+              <div>
+                <Label htmlFor="name">Nom de la Famille</Label>
+                <Input 
+                  id="name" 
+                  placeholder="Ex: Accessoires"
+                  value={nouvelleFamille.name}
+                  onChange={(e) => setNouvelleFamille({...nouvelleFamille, name: e.target.value})}
+                />
+              </div>
+              <div>
+                <Label htmlFor="description">Description</Label>
+                <Input 
+                  id="description" 
+                  placeholder="Description de la famille de produits"
+                  value={nouvelleFamille.description}
+                  onChange={(e) => setNouvelleFamille({...nouvelleFamille, description: e.target.value})}
+                />
+              </div>
+              <div className="flex justify-end space-x-2">
+                <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+                  Annuler
+                </Button>
+                <Button onClick={handleAjouterFamille}>
+                  Ajouter
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </CardHeader>
       <CardContent className="p-0">
         <Table>

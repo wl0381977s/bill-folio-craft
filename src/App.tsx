@@ -21,6 +21,9 @@ import AchatsCommandesPage from "./pages/AchatsCommandesPage";
 import InventairePage from "./pages/InventairePage";
 import StockAlertesPage from "./pages/StockAlertesPage";
 import ParametresPage from "./pages/ParametresPage";
+import BudgetPage from "./pages/BudgetPage";
+import NouveauBonPage from "./pages/NouveauBonPage";
+import NouvelleFaturePage from "./pages/NouvelleFaturePage";
 import AuthPage from "./pages/AuthPage";
 import NotFound from "./pages/NotFound";
 
@@ -49,8 +52,11 @@ const App = () => (
           <Route path="/stock/inventaire" element={<InventairePage />} />
           <Route path="/stock/alertes" element={<StockAlertesPage />} />
           <Route path="/facturation/creer" element={<CreateInvoicePage />} />
+          <Route path="/facturation/nouvelle" element={<NouvelleFaturePage />} />
           <Route path="/facturation/liste" element={<InvoicesListePage />} />
           <Route path="/achats/commandes" element={<AchatsCommandesPage />} />
+          <Route path="/achats/nouveau-bon" element={<NouveauBonPage />} />
+          <Route path="/budget" element={<BudgetPage />} />
           <Route path="/parametres" element={<ParametresPage />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

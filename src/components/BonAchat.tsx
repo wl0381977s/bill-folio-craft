@@ -1,11 +1,13 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ClipboardList, DollarSign, FileText, Plus } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const BonAchat = () => {
+  const navigate = useNavigate();
+  
   // Données fictives pour les bons d'achat
   const achats = [
     { id: 'BA-2023-001', fournisseur: 'Fournisseur A', date: '28 Avr 2025', montant: '2,450.00 €', statut: 'validé' },
@@ -17,7 +19,10 @@ const BonAchat = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Bons d'Achat</h2>
-        <Button className="flex items-center gap-2">
+        <Button 
+          className="flex items-center gap-2"
+          onClick={() => navigate('/achats/nouveau-bon')}
+        >
           <Plus size={16} />
           Nouveau Bon
         </Button>
@@ -120,15 +125,27 @@ const BonAchat = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              <Button className="w-full justify-start" variant="outline">
+              <Button 
+                className="w-full justify-start" 
+                variant="outline"
+                onClick={() => navigate('/achats/nouveau-bon')}
+              >
                 <Plus className="mr-2 h-4 w-4" />
                 Nouveau bon d'achat
               </Button>
-              <Button className="w-full justify-start" variant="outline">
+              <Button 
+                className="w-full justify-start" 
+                variant="outline"
+                onClick={() => navigate('/budget')}
+              >
                 <DollarSign className="mr-2 h-4 w-4" />
                 Gérer le budget
               </Button>
-              <Button className="w-full justify-start" variant="outline">
+              <Button 
+                className="w-full justify-start" 
+                variant="outline"
+                onClick={() => navigate('/achats/commandes')}
+              >
                 <ClipboardList className="mr-2 h-4 w-4" />
                 Voir les commandes
               </Button>

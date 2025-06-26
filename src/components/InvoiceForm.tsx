@@ -7,8 +7,11 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { Plus, Trash2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const InvoiceForm = () => {
+  const navigate = useNavigate();
+
   return (
     <Card>
       <CardHeader>
@@ -113,7 +116,12 @@ const InvoiceForm = () => {
       </CardContent>
       <CardFooter className="flex justify-end space-x-2 border-t pt-4">
         <Button variant="outline">Save as Draft</Button>
-        <Button className="bg-theme-blue hover:bg-blue-700">Create Invoice</Button>
+        <Button 
+          className="bg-theme-blue hover:bg-blue-700"
+          onClick={() => navigate('/facturation/nouvelle')}
+        >
+          Create Invoice
+        </Button>
       </CardFooter>
     </Card>
   );

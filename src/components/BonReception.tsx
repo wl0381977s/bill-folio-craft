@@ -1,11 +1,13 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { FileText, Package2, Plus } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const BonReception = () => {
+  const navigate = useNavigate();
+
   // Données fictives pour les bons de réception
   const receptions = [
     { id: 'BR-2023-001', fournisseur: 'Fournisseur A', date: '28 Avr 2025', statut: 'validé', articles: 12 },
@@ -17,7 +19,10 @@ const BonReception = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Bons de Réception</h2>
-        <Button className="flex items-center gap-2">
+        <Button 
+          className="flex items-center gap-2"
+          onClick={() => navigate('/achats/nouveau-bon')}
+        >
           <Plus size={16} />
           Nouveau Bon
         </Button>
@@ -120,11 +125,19 @@ const BonReception = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              <Button className="w-full justify-start" variant="outline">
+              <Button 
+                className="w-full justify-start" 
+                variant="outline"
+                onClick={() => navigate('/achats/nouveau-bon')}
+              >
                 <Plus className="mr-2 h-4 w-4" />
                 Nouveau bon de réception
               </Button>
-              <Button className="w-full justify-start" variant="outline">
+              <Button 
+                className="w-full justify-start" 
+                variant="outline"
+                onClick={() => navigate('/stock/alertes')}
+              >
                 <Package2 className="mr-2 h-4 w-4" />
                 Voir les articles en attente
               </Button>
