@@ -16,6 +16,11 @@ import POSPage from "./pages/POSPage";
 import TransfertsPage from "./pages/TransfertsPage";
 import ProduitsListePage from "./pages/ProduitsListePage";
 import CreateInvoicePage from "./pages/CreateInvoicePage";
+import InvoicesListePage from "./pages/InvoicesListePage";
+import AchatsCommandesPage from "./pages/AchatsCommandesPage";
+import InventairePage from "./pages/InventairePage";
+import StockAlertesPage from "./pages/StockAlertesPage";
+import ParametresPage from "./pages/ParametresPage";
 import AuthPage from "./pages/AuthPage";
 import NotFound from "./pages/NotFound";
 
@@ -41,7 +46,12 @@ const App = () => (
           <Route path="/magasins" element={<MagasinsPage />} />
           <Route path="/pos" element={<POSPage />} />
           <Route path="/stock/transferts" element={<TransfertsPage />} />
+          <Route path="/stock/inventaire" element={<InventairePage />} />
+          <Route path="/stock/alertes" element={<StockAlertesPage />} />
           <Route path="/facturation/creer" element={<CreateInvoicePage />} />
+          <Route path="/facturation/liste" element={<InvoicesListePage />} />
+          <Route path="/achats/commandes" element={<AchatsCommandesPage />} />
+          <Route path="/parametres" element={<ParametresPage />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
