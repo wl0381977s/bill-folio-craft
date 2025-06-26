@@ -24,6 +24,12 @@ import ParametresPage from "./pages/ParametresPage";
 import BudgetPage from "./pages/BudgetPage";
 import NouveauBonPage from "./pages/NouveauBonPage";
 import NouvelleFaturePage from "./pages/NouvelleFaturePage";
+import CommandesClientsPage from "./pages/CommandesClientsPage";
+import BonsLivraisonPage from "./pages/BonsLivraisonPage";
+import BonsSortiePage from "./pages/BonsSortiePage";
+import FacturesFournisseursPage from "./pages/FacturesFournisseursPage";
+import ComptabilitePage from "./pages/ComptabilitePage";
+import TresoreriePage from "./pages/TresoreriePage";
 import AuthPage from "./pages/AuthPage";
 import NotFound from "./pages/NotFound";
 
@@ -58,6 +64,19 @@ const App = () => (
           <Route path="/achats/nouveau-bon" element={<NouveauBonPage />} />
           <Route path="/budget" element={<BudgetPage />} />
           <Route path="/parametres" element={<ParametresPage />} />
+          
+          {/* Nouvelles pages pour les ventes */}
+          <Route path="/ventes/commandes" element={<CommandesClientsPage />} />
+          <Route path="/ventes/livraisons" element={<BonsLivraisonPage />} />
+          <Route path="/ventes/sorties" element={<BonsSortiePage />} />
+          
+          {/* Pages pour les factures fournisseurs */}
+          <Route path="/achats/factures" element={<FacturesFournisseursPage />} />
+          
+          {/* Pages comptabilité et trésorerie */}
+          <Route path="/comptabilite" element={<ComptabilitePage />} />
+          <Route path="/tresorerie" element={<TresoreriePage />} />
+          
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

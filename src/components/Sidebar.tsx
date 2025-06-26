@@ -9,7 +9,9 @@ import {
   Package2, 
   Tag, 
   Settings,
-  Store
+  Store,
+  Calculator,
+  CreditCard
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import MultiLevelMenu from './MultiLevelMenu';
@@ -35,6 +37,16 @@ const Sidebar = () => {
       ]
     },
     {
+      id: 'ventes',
+      title: 'Ventes',
+      icon: <ShoppingCart size={18} />,
+      children: [
+        { id: 'commandes-clients', title: 'Commandes clients', path: '/ventes/commandes' },
+        { id: 'bons-livraison', title: 'Bons de livraison', path: '/ventes/livraisons' },
+        { id: 'bons-sortie', title: 'Bons de sortie', path: '/ventes/sorties' }
+      ]
+    },
+    {
       id: 'facturation',
       title: 'Facturation',
       icon: <FileText size={18} />,
@@ -49,7 +61,8 @@ const Sidebar = () => {
       icon: <ShoppingCart size={18} />,
       children: [
         { id: 'bons-achat', title: 'Bons d\'achat', path: '/bons-achat' },
-        { id: 'commandes-fournisseurs', title: 'Commandes fournisseurs', path: '/achats/commandes' }
+        { id: 'commandes-fournisseurs', title: 'Commandes fournisseurs', path: '/achats/commandes' },
+        { id: 'factures-fournisseurs', title: 'Factures fournisseurs', path: '/achats/factures' }
       ]
     },
     {
@@ -72,6 +85,18 @@ const Sidebar = () => {
         { id: 'sous-familles', title: 'Sous-familles', path: '/produits/sous-familles' },
         { id: 'liste-produits', title: 'Liste des produits', path: '/produits/liste' }
       ]
+    },
+    {
+      id: 'comptabilite',
+      title: 'Comptabilité',
+      icon: <Calculator size={18} />,
+      path: '/comptabilite'
+    },
+    {
+      id: 'tresorerie',
+      title: 'Trésorerie',
+      icon: <CreditCard size={18} />,
+      path: '/tresorerie'
     },
     {
       id: 'magasins',
