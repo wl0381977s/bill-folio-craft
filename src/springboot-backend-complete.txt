@@ -1,0 +1,1537 @@
+
+# SPRING BOOT BACKEND - SYSTÈME DE GESTION D'INVENTAIRE
+# Structure complète du projet avec Maven et PostgreSQL
+
+## 1. STRUCTURE DU PROJET
+```
+inventory-backend/
+├── pom.xml
+├── src/
+│   └── main/
+│       ├── java/
+│       │   └── com/
+│       │       └── inventory/
+│       │           ├── InventoryApplication.java
+│       │           ├── config/
+│       │           │   ├── CorsConfig.java
+│       │           │   └── DatabaseConfig.java
+│       │           ├── entity/
+│       │           │   ├── Tier.java
+│       │           │   ├── Famille.java
+│       │           │   ├── SousFamille.java
+│       │           │   ├── Magasin.java
+│       │           │   ├── Produit.java
+│       │           │   ├── StockMagasin.java
+│       │           │   └── Transfert.java
+│       │           ├── repository/
+│       │           │   ├── TierRepository.java
+│       │           │   ├── FamilleRepository.java
+│       │           │   ├── SousFamilleRepository.java
+│       │           │   ├── MagasinRepository.java
+│       │           │   ├── ProduitRepository.java
+│       │           │   ├── StockMagasinRepository.java
+│       │           │   └── TransfertRepository.java
+│       │           ├── service/
+│       │           │   ├── TierService.java
+│       │           │   ├── FamilleService.java
+│       │           │   ├── SousFamilleService.java
+│       │           │   ├── MagasinService.java
+│       │           │   ├── ProduitService.java
+│       │           │   ├── StockService.java
+│       │           │   └── TransfertService.java
+│       │           └── controller/
+│       │               ├── TierController.java
+│       │               ├── FamilleController.java
+│       │               ├── SousFamilleController.java
+│       │               ├── MagasinController.java
+│       │               ├── ProduitController.java
+│       │               ├── StockController.java
+│       │               └── TransfertController.java
+│       └── resources/
+│           ├── application.yml
+│           └── data.sql
+```
+
+## 2. FICHIER POM.XML
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 
+         https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.2.0</version>
+        <relativePath/>
+    </parent>
+    
+    <groupId>com.inventory</groupId>
+    <artifactId>inventory-backend</artifactId>
+    <version>1.0.0</version>
+    <packaging>jar</packaging>
+    <name>Inventory Management System</name>
+    
+    <properties>
+        <java.version>17</java.version>
+    </properties>
+    
+    <dependencies>
+        <!-- Spring Boot Starters -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+        
+        <!-- PostgreSQL Driver -->
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+        
+        <!-- Development Tools -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-devtools</artifactId>
+            <scope>runtime</scope>
+            <optional>true</optional>
+        </dependency>
+        
+        <!-- Testing -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+    
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+</project>
+```
+
+## 3. APPLICATION.YML
+```yaml
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+
+spring:
+  application:
+    name: inventory-management
+  
+  datasource:
+    url: jdbc:postgresql://localhost:5432/inventory_db
+    username: postgres
+    password: your_password
+    driver-class-name: org.postgresql.Driver
+  
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+  
+  sql:
+    init:
+      mode: always
+
+logging:
+  level:
+    com.inventory: DEBUG
+    org.springframework.web: DEBUG
+```
+
+## 4. CLASSE PRINCIPALE - InventoryApplication.java
+```java
+package com.inventory;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class InventoryApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(InventoryApplication.class, args);
+    }
+}
+```
+
+## 5. CONFIGURATION CORS - CorsConfig.java
+```java
+package com.inventory.config;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+@Configuration
+public class CorsConfig implements WebMvcConfigurer {
+    
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+        registry.addMapping("/api/**")
+                .allowedOrigins("http://localhost:5173", "http://localhost:3000")
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                .allowedHeaders("*")
+                .allowCredentials(true);
+    }
+}
+```
+
+## 6. ENTITÉS JPA
+
+### Tier.java
+```java
+package com.inventory.entity;
+
+import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import java.time.LocalDateTime;
+import java.math.BigDecimal;
+
+@Entity
+@Table(name = "tiers")
+public class Tier {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    
+    @Column(unique = true, nullable = false)
+    @NotBlank
+    private String code;
+    
+    @NotBlank
+    private String name;
+    
+    @Email
+    private String email;
+    
+    private String phone;
+    private String address;
+    
+    @Enumerated(EnumType.STRING)
+    private TierType type;
+    
+    @Enumerated(EnumType.STRING)
+    private TierStatus status = TierStatus.ACTIVE;
+    
+    private BigDecimal outstandingAmount = BigDecimal.ZERO;
+    private String initials;
+    
+    @Column(name = "created_at")
+    private LocalDateTime createdAt = LocalDateTime.now();
+    
+    // Constructeurs, getters et setters
+    public Tier() {}
+    
+    public Tier(String code, String name, String email, TierType type) {
+        this.code = code;
+        this.name = name;
+        this.email = email;
+        this.type = type;
+        this.initials = generateInitials(name);
+    }
+    
+    private String generateInitials(String name) {
+        String[] parts = name.split(" ");
+        StringBuilder initials = new StringBuilder();
+        for (String part : parts) {
+            if (!part.isEmpty()) {
+                initials.append(part.charAt(0));
+            }
+        }
+        return initials.toString().toUpperCase();
+    }
+    
+    // Getters et Setters
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    
+    public String getCode() { return code; }
+    public void setCode(String code) { this.code = code; }
+    
+    public String getName() { return name; }
+    public void setName(String name) { 
+        this.name = name;
+        this.initials = generateInitials(name);
+    }
+    
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
+    
+    public String getPhone() { return phone; }
+    public void setPhone(String phone) { this.phone = phone; }
+    
+    public String getAddress() { return address; }
+    public void setAddress(String address) { this.address = address; }
+    
+    public TierType getType() { return type; }
+    public void setType(TierType type) { this.type = type; }
+    
+    public TierStatus getStatus() { return status; }
+    public void setStatus(TierStatus status) { this.status = status; }
+    
+    public BigDecimal getOutstandingAmount() { return outstandingAmount; }
+    public void setOutstandingAmount(BigDecimal outstandingAmount) { this.outstandingAmount = outstandingAmount; }
+    
+    public String getInitials() { return initials; }
+    public void setInitials(String initials) { this.initials = initials; }
+    
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    
+    public enum TierType {
+        CLIENT, FOURNISSEUR
+    }
+    
+    public enum TierStatus {
+        ACTIVE, INACTIVE
+    }
+}
+```
+
+### Famille.java
+```java
+package com.inventory.entity;
+
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import java.util.List;
+
+@Entity
+@Table(name = "familles")
+public class Famille {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    
+    @Column(unique = true, nullable = false)
+    @NotBlank
+    private String code;
+    
+    @NotBlank
+    private String name;
+    
+    private String description;
+    
+    @OneToMany(mappedBy = "famille", cascade = CascadeType.ALL)
+    private List<SousFamille> sousFamilles;
+    
+    @OneToMany(mappedBy = "famille", cascade = CascadeType.ALL)
+    private List<Produit> produits;
+    
+    // Constructeurs, getters et setters
+    public Famille() {}
+    
+    public Famille(String code, String name, String description) {
+        this.code = code;
+        this.name = name;
+        this.description = description;
+    }
+    
+    // Getters et Setters
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    
+    public String getCode() { return code; }
+    public void setCode(String code) { this.code = code; }
+    
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+    
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
+    
+    public List<SousFamille> getSousFamilles() { return sousFamilles; }
+    public void setSousFamilles(List<SousFamille> sousFamilles) { this.sousFamilles = sousFamilles; }
+    
+    public List<Produit> getProduits() { return produits; }
+    public void setProduits(List<Produit> produits) { this.produits = produits; }
+}
+```
+
+### SousFamille.java
+```java
+package com.inventory.entity;
+
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import java.util.List;
+
+@Entity
+@Table(name = "sous_familles")
+public class SousFamille {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    
+    @Column(unique = true, nullable = false)
+    @NotBlank
+    private String code;
+    
+    @NotBlank
+    private String name;
+    
+    private String description;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "famille_id", nullable = false)
+    private Famille famille;
+    
+    @OneToMany(mappedBy = "sousFamille", cascade = CascadeType.ALL)
+    private List<Produit> produits;
+    
+    // Constructeurs, getters et setters
+    public SousFamille() {}
+    
+    public SousFamille(String code, String name, String description, Famille famille) {
+        this.code = code;
+        this.name = name;
+        this.description = description;
+        this.famille = famille;
+    }
+    
+    // Getters et Setters
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    
+    public String getCode() { return code; }
+    public void setCode(String code) { this.code = code; }
+    
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+    
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
+    
+    public Famille getFamille() { return famille; }
+    public void setFamille(Famille famille) { this.famille = famille; }
+    
+    public List<Produit> getProduits() { return produits; }
+    public void setProduits(List<Produit> produits) { this.produits = produits; }
+}
+```
+
+### Magasin.java
+```java
+package com.inventory.entity;
+
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import java.util.List;
+
+@Entity
+@Table(name = "magasins")
+public class Magasin {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    
+    @Column(unique = true, nullable = false)
+    @NotBlank
+    private String code;
+    
+    @NotBlank
+    private String name;
+    
+    private String address;
+    private String manager;
+    
+    @Column(name = "is_active")
+    private Boolean isActive = true;
+    
+    @OneToMany(mappedBy = "magasin", cascade = CascadeType.ALL)
+    private List<StockMagasin> stocks;
+    
+    // Constructeurs, getters et setters
+    public Magasin() {}
+    
+    public Magasin(String code, String name, String address, String manager) {
+        this.code = code;
+        this.name = name;
+        this.address = address;
+        this.manager = manager;
+    }
+    
+    // Getters et Setters
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    
+    public String getCode() { return code; }
+    public void setCode(String code) { this.code = code; }
+    
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+    
+    public String getAddress() { return address; }
+    public void setAddress(String address) { this.address = address; }
+    
+    public String getManager() { return manager; }
+    public void setManager(String manager) { this.manager = manager; }
+    
+    public Boolean getIsActive() { return isActive; }
+    public void setIsActive(Boolean isActive) { this.isActive = isActive; }
+    
+    public List<StockMagasin> getStocks() { return stocks; }
+    public void setStocks(List<StockMagasin> stocks) { this.stocks = stocks; }
+}
+```
+
+### Produit.java
+```java
+package com.inventory.entity;
+
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.DecimalMin;
+import java.math.BigDecimal;
+import java.util.List;
+
+@Entity
+@Table(name = "produits")
+public class Produit {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    
+    @Column(unique = true, nullable = false)
+    @NotBlank
+    private String code;
+    
+    @NotBlank
+    private String name;
+    
+    private String description;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "famille_id", nullable = false)
+    private Famille famille;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "sous_famille_id")
+    private SousFamille sousFamille;
+    
+    @DecimalMin(value = "0.0", inclusive = false)
+    @Column(name = "prix_achat", precision = 10, scale = 2)
+    private BigDecimal prixAchat;
+    
+    @DecimalMin(value = "0.0", inclusive = false)
+    @Column(name = "prix_vente", precision = 10, scale = 2)
+    private BigDecimal prixVente;
+    
+    @Column(name = "stock_min")
+    private Integer stockMin = 0;
+    
+    @Column(name = "stock_max")
+    private Integer stockMax = 1000;
+    
+    @OneToMany(mappedBy = "produit", cascade = CascadeType.ALL)
+    private List<StockMagasin> stocks;
+    
+    // Constructeurs, getters et setters
+    public Produit() {}
+    
+    public Produit(String code, String name, Famille famille, BigDecimal prixAchat, BigDecimal prixVente) {
+        this.code = code;
+        this.name = name;  
+        this.famille = famille;
+        this.prixAchat = prixAchat;
+        this.prixVente = prixVente;
+    }
+    
+    // Getters et Setters
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    
+    public String getCode() { return code; }
+    public void setCode(String code) { this.code = code; }
+    
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+    
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
+    
+    public Famille getFamille() { return famille; }
+    public void setFamille(Famille famille) { this.famille = famille; }
+    
+    public SousFamille getSousFamille() { return sousFamille; }
+    public void setSousFamille(SousFamille sousFamille) { this.sousFamille = sousFamille; }
+    
+    public BigDecimal getPrixAchat() { return prixAchat; }
+    public void setPrixAchat(BigDecimal prixAchat) { this.prixAchat = prixAchat; }
+    
+    public BigDecimal getPrixVente() { return prixVente; }
+    public void setPrixVente(BigDecimal prixVente) { this.prixVente = prixVente; }
+    
+    public Integer getStockMin() { return stockMin; }
+    public void setStockMin(Integer stockMin) { this.stockMin = stockMin; }
+    
+    public Integer getStockMax() { return stockMax; }
+    public void setStockMax(Integer stockMax) { this.stockMax = stockMax; }
+    
+    public List<StockMagasin> getStocks() { return stocks; }
+    public void setStocks(List<StockMagasin> stocks) { this.stocks = stocks; }
+}
+```
+
+### StockMagasin.java
+```java
+package com.inventory.entity;
+
+import jakarta.persistence.*;
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name = "stock_magasin")
+@IdClass(StockMagasinId.class)
+public class StockMagasin {
+    @Id
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "produit_id")
+    private Produit produit;
+    
+    @Id
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "magasin_id")
+    private Magasin magasin;
+    
+    private Integer quantite = 0;
+    
+    @Column(name = "last_updated")
+    private LocalDateTime lastUpdated = LocalDateTime.now();
+    
+    // Constructeurs, getters et setters
+    public StockMagasin() {}
+    
+    public StockMagasin(Produit produit, Magasin magasin, Integer quantite) {
+        this.produit = produit;
+        this.magasin = magasin;
+        this.quantite = quantite;
+    }
+    
+    // Getters et Setters
+    public Produit getProduit() { return produit; }
+    public void setProduit(Produit produit) { this.produit = produit; }
+    
+    public Magasin getMagasin() { return magasin; }
+    public void setMagasin(Magasin magasin) { this.magasin = magasin; }
+    
+    public Integer getQuantite() { return quantite; }
+    public void setQuantite(Integer quantite) { 
+        this.quantite = quantite;
+        this.lastUpdated = LocalDateTime.now();
+    }
+    
+    public LocalDateTime getLastUpdated() { return lastUpdated; }
+    public void setLastUpdated(LocalDateTime lastUpdated) { this.lastUpdated = lastUpdated; }
+}
+
+// Classe pour la clé composite
+class StockMagasinId implements java.io.Serializable {
+    private Long produit;
+    private Long magasin;
+    
+    public StockMagasinId() {}
+    
+    public StockMagasinId(Long produit, Long magasin) {
+        this.produit = produit;
+        this.magasin = magasin;
+    }
+    
+    // equals et hashCode
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof StockMagasinId)) return false;
+        StockMagasinId that = (StockMagasinId) o;
+        return produit.equals(that.produit) && magasin.equals(that.magasin);
+    }
+    
+    @Override
+    public int hashCode() {
+        return produit.hashCode() + magasin.hashCode();
+    }
+}
+```
+
+### Transfert.java
+```java
+package com.inventory.entity;
+
+import jakarta.persistence.*;
+import java.time.LocalDateTime;
+import java.util.List;
+
+@Entity
+@Table(name = "transferts")
+public class Transfert {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    
+    @Column(nullable = false)
+    private LocalDateTime date = LocalDateTime.now();
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "from_magasin_id", nullable = false)
+    private Magasin fromMagasin;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "to_magasin_id", nullable = false)
+    private Magasin toMagasin;
+    
+    @Enumerated(EnumType.STRING)
+    private TransfertStatus status = TransfertStatus.PENDING;
+    
+    @OneToMany(mappedBy = "transfert", cascade = CascadeType.ALL)
+    private List<TransfertItem> items;
+    
+    // Constructeurs, getters et setters
+    public Transfert() {}
+    
+    public Transfert(Magasin fromMagasin, Magasin toMagasin) {
+        this.fromMagasin = fromMagasin;
+        this.toMagasin = toMagasin;
+    }
+    
+    // Getters et Setters
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    
+    public LocalDateTime getDate() { return date; }
+    public void setDate(LocalDateTime date) { this.date = date; }
+    
+    public Magasin getFromMagasin() { return fromMagasin; }
+    public void setFromMagasin(Magasin fromMagasin) { this.fromMagasin = fromMagasin; }
+    
+    public Magasin getToMagasin() { return toMagasin; }
+    public void setToMagasin(Magasin toMagasin) { this.toMagasin = toMagasin; }
+    
+    public TransfertStatus getStatus() { return status; }
+    public void setStatus(TransfertStatus status) { this.status = status; }
+    
+    public List<TransfertItem> getItems() { return items; }
+    public void setItems(List<TransfertItem> items) { this.items = items; }
+    
+    public enum TransfertStatus {
+        PENDING, COMPLETED, CANCELLED
+    }
+}
+
+@Entity
+@Table(name = "transfert_items")
+class TransfertItem {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "transfert_id")
+    private Transfert transfert;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "produit_id")
+    private Produit produit;
+    
+    private Integer quantite;
+    
+    // Constructeurs, getters et setters
+    public TransfertItem() {}
+    
+    public TransfertItem(Transfert transfert, Produit produit, Integer quantite) {
+        this.transfert = transfert;
+        this.produit = produit;
+        this.quantite = quantite;
+    }
+    
+    // Getters et Setters
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    
+    public Transfert getTransfert() { return transfert; }
+    public void setTransfert(Transfert transfert) { this.transfert = transfert; }
+    
+    public Produit getProduit() { return produit; }
+    public void setProduit(Produit produit) { this.produit = produit; }
+    
+    public Integer getQuantite() { return quantite; }
+    public void setQuantite(Integer quantite) { this.quantite = quantite; }
+}
+```
+
+## 7. REPOSITORIES
+
+### TierRepository.java
+```java
+package com.inventory.repository;
+
+import com.inventory.entity.Tier;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+import java.util.List;
+import java.util.Optional;
+
+@Repository
+public interface TierRepository extends JpaRepository<Tier, Long> {
+    Optional<Tier> findByCode(String code);
+    List<Tier> findByType(Tier.TierType type);
+    List<Tier> findByStatus(Tier.TierStatus status);
+    List<Tier> findByNameContainingIgnoreCase(String name);
+    
+    @Query("SELECT t FROM Tier t WHERE t.type = :type AND t.status = :status")
+    List<Tier> findByTypeAndStatus(@Param("type") Tier.TierType type, @Param("status") Tier.TierStatus status);
+    
+    @Query("SELECT COUNT(t) FROM Tier t WHERE t.type = :type")
+    Long countByType(@Param("type") Tier.TierType type);
+}
+```
+
+### MagasinRepository.java
+```java
+package com.inventory.repository;
+
+import com.inventory.entity.Magasin;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.stereotype.Repository;
+import java.util.List;
+import java.util.Optional;
+
+@Repository
+public interface MagasinRepository extends JpaRepository<Magasin, Long> {
+    Optional<Magasin> findByCode(String code);
+    List<Magasin> findByIsActive(Boolean isActive);
+    List<Magasin> findByNameContainingIgnoreCase(String name);
+    
+    @Query("SELECT COUNT(m) FROM Magasin m WHERE m.isActive = true")
+    Long countActiveMagasins();
+}
+```
+
+### ProduitRepository.java
+```java
+package com.inventory.repository;
+
+import com.inventory.entity.Produit;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+import java.util.List;
+import java.util.Optional;
+
+@Repository
+public interface ProduitRepository extends JpaRepository<Produit, Long> {
+    Optional<Produit> findByCode(String code);
+    List<Produit> findByFamilleId(Long familleId);
+    List<Produit> findBySousFamilleId(Long sousFamilleId);
+    List<Produit> findByNameContainingIgnoreCase(String name);
+    
+    @Query("SELECT p FROM Produit p JOIN p.stocks s WHERE s.magasin.id = :magasinId")
+    List<Produit> findByMagasinId(@Param("magasinId") Long magasinId);
+    
+    @Query("SELECT p FROM Produit p JOIN p.stocks s WHERE s.quantite < p.stockMin")
+    List<Produit> findProduitsWithLowStock();
+}
+```
+
+### StockMagasinRepository.java
+```java
+package com.inventory.repository;
+
+import com.inventory.entity.StockMagasin;
+import com.inventory.entity.StockMagasinId;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+import java.util.List;
+import java.util.Optional;
+
+@Repository
+public interface StockMagasinRepository extends JpaRepository<StockMagasin, StockMagasinId> {
+    List<StockMagasin> findByProduitId(Long produitId);
+    List<StockMagasin> findByMagasinId(Long magasinId);
+    
+    @Query("SELECT s FROM StockMagasin s WHERE s.produit.id = :produitId AND s.magasin.id = :magasinId")
+    Optional<StockMagasin> findByProduitIdAndMagasinId(@Param("produitId") Long produitId, @Param("magasinId") Long magasinId);
+    
+    @Query("SELECT s FROM StockMagasin s WHERE s.quantite < s.produit.stockMin")
+    List<StockMagasin> findLowStockItems();
+    
+    @Query("SELECT SUM(s.quantite) FROM StockMagasin s WHERE s.produit.id = :produitId")
+    Integer getTotalStockForProduit(@Param("produitId") Long produitId);
+}
+```
+
+## 8. SERVICES
+
+### MagasinService.java
+```java
+package com.inventory.service;
+
+import com.inventory.entity.Magasin;
+import com.inventory.repository.MagasinRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import java.util.List;
+import java.util.Optional;
+
+@Service
+public class MagasinService {
+    
+    @Autowired
+    private MagasinRepository magasinRepository;
+    
+    public List<Magasin> findAll() {
+        return magasinRepository.findAll();
+    }
+    
+    public Optional<Magasin> findById(Long id) {
+        return magasinRepository.findById(id);
+    }
+    
+    public Optional<Magasin> findByCode(String code) {
+        return magasinRepository.findByCode(code);
+    }
+    
+    public List<Magasin> findByIsActive(Boolean isActive) {
+        return magasinRepository.findByIsActive(isActive);
+    }
+    
+    public List<Magasin> searchByName(String name) {
+        return magasinRepository.findByNameContainingIgnoreCase(name);
+    }
+    
+    public Magasin save(Magasin magasin) {
+        return magasinRepository.save(magasin);
+    }
+    
+    public void deleteById(Long id) {
+        magasinRepository.deleteById(id);
+    }
+    
+    public Long countActiveMagasins() {
+        return magasinRepository.countActiveMagasins();
+    }
+    
+    public Magasin toggleStatus(Long id) {
+        Optional<Magasin> magasinOpt = findById(id);
+        if (magasinOpt.isPresent()) {
+            Magasin magasin = magasinOpt.get();
+            magasin.setIsActive(!magasin.getIsActive());
+            return save(magasin);
+        }
+        throw new RuntimeException("Magasin not found with id: " + id);
+    }
+}
+```
+
+### ProduitService.java
+```java
+package com.inventory.service;
+
+import com.inventory.entity.Produit;
+import com.inventory.entity.StockMagasin;
+import com.inventory.repository.ProduitRepository;
+import com.inventory.repository.StockMagasinRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import java.util.List;
+import java.util.Optional;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+@Service
+public class ProduitService {
+    
+    @Autowired
+    private ProduitRepository produitRepository;
+    
+    @Autowired
+    private StockMagasinRepository stockMagasinRepository;
+    
+    public List<Produit> findAll() {
+        return produitRepository.findAll();
+    }
+    
+    public Optional<Produit> findById(Long id) {
+        return produitRepository.findById(id);
+    }
+    
+    public Optional<Produit> findByCode(String code) {
+        return produitRepository.findByCode(code);
+    }
+    
+    public List<Produit> findByFamilleId(Long familleId) {
+        return produitRepository.findByFamilleId(familleId);
+    }
+    
+    public List<Produit> findByMagasinId(Long magasinId) {
+        return produitRepository.findByMagasinId(magasinId);
+    }
+    
+    public List<Produit> searchByName(String name) {
+        return produitRepository.findByNameContainingIgnoreCase(name);
+    }
+    
+    public Produit save(Produit produit) {
+        return produitRepository.save(produit);
+    }
+    
+    public void deleteById(Long id) {
+        produitRepository.deleteById(id);
+    }
+    
+    public List<Produit> findProduitsWithLowStock() {
+        return produitRepository.findProduitsWithLowStock();
+    }
+    
+    public Map<Long, Integer> getStockByMagasin(Long produitId) {
+        List<StockMagasin> stocks = stockMagasinRepository.findByProduitId(produitId);
+        return stocks.stream()
+                .collect(Collectors.toMap(
+                    stock -> stock.getMagasin().getId(),
+                    StockMagasin::getQuantite
+                ));
+    }
+    
+    public Integer getTotalStock(Long produitId) {
+        return stockMagasinRepository.getTotalStockForProduit(produitId);
+    }
+}
+```
+
+### StockService.java
+```java
+package com.inventory.service;
+
+import com.inventory.entity.StockMagasin;
+import com.inventory.entity.Produit;
+import com.inventory.entity.Magasin;
+import com.inventory.repository.StockMagasinRepository;
+import com.inventory.repository.ProduitRepository;
+import com.inventory.repository.MagasinRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import java.util.List;
+import java.util.Optional;
+
+@Service
+public class StockService {
+    
+    @Autowired
+    private StockMagasinRepository stockMagasinRepository;
+    
+    @Autowired
+    private ProduitRepository produitRepository;
+    
+    @Autowired
+    private MagasinRepository magasinRepository;
+    
+    public List<StockMagasin> findAll() {
+        return stockMagasinRepository.findAll();
+    }
+    
+    public List<StockMagasin> findByProduitId(Long produitId) {
+        return stockMagasinRepository.findByProduitId(produitId);
+    }
+    
+    public List<StockMagasin> findByMagasinId(Long magasinId) {
+        return stockMagasinRepository.findByMagasinId(magasinId);
+    }
+    
+    public Optional<StockMagasin> findByProduitAndMagasin(Long produitId, Long magasinId) {
+        return stockMagasinRepository.findByProduitIdAndMagasinId(produitId, magasinId);
+    }
+    
+    public List<StockMagasin> findLowStockItems() {
+        return stockMagasinRepository.findLowStockItems();
+    }
+    
+    @Transactional
+    public StockMagasin updateStock(Long produitId, Long magasinId, Integer newQuantity) {
+        Optional<Produit> produitOpt = produitRepository.findById(produitId);
+        Optional<Magasin> magasinOpt = magasinRepository.findById(magasinId);
+        
+        if (produitOpt.isPresent() && magasinOpt.isPresent()) {
+            Optional<StockMagasin> stockOpt = findByProduitAndMagasin(produitId, magasinId);
+            
+            StockMagasin stock;
+            if (stockOpt.isPresent()) {
+                stock = stockOpt.get();
+            } else {
+                stock = new StockMagasin(produitOpt.get(), magasinOpt.get(), 0);
+            }
+            
+            stock.setQuantite(newQuantity);
+            return stockMagasinRepository.save(stock);
+        }
+        
+        throw new RuntimeException("Produit ou Magasin not found");
+    }
+    
+    @Transactional
+    public StockMagasin adjustStock(Long produitId, Long magasinId, Integer adjustment) {
+        Optional<StockMagasin> stockOpt = findByProduitAndMagasin(produitId, magasinId);
+        
+        if (stockOpt.isPresent()) {
+            StockMagasin stock = stockOpt.get();
+            Integer newQuantity = stock.getQuantite() + adjustment;
+            if (newQuantity < 0) {
+                throw new RuntimeException("Stock quantity cannot be negative");
+            }
+            stock.setQuantite(newQuantity);
+            return stockMagasinRepository.save(stock);
+        }
+        
+        throw new RuntimeException("Stock not found for product and magasin");
+    }
+    
+    public Integer getTotalStockForProduit(Long produitId) {
+        return stockMagasinRepository.getTotalStockForProduit(produitId);
+    }
+}
+```
+
+## 9. CONTROLLERS
+
+### MagasinController.java
+```java
+package com.inventory.controller;
+
+import com.inventory.entity.Magasin;
+import com.inventory.service.MagasinService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
+import java.util.List;
+import java.util.Optional;
+
+@RestController
+@RequestMapping("/api/magasins")
+@CrossOrigin(origins = "*")
+public class MagasinController {
+    
+    @Autowired
+    private MagasinService magasinService;
+    
+    @GetMapping
+    public ResponseEntity<List<Magasin>> getAllMagasins() {
+        List<Magasin> magasins = magasinService.findAll();
+        return ResponseEntity.ok(magasins);
+    }
+    
+    @GetMapping("/{id}")
+    public ResponseEntity<Magasin> getMagasinById(@PathVariable Long id) {
+        Optional<Magasin> magasin = magasinService.findById(id);
+        return magasin.map(ResponseEntity::ok)
+                     .orElse(ResponseEntity.notFound().build());
+    }
+    
+    @GetMapping("/code/{code}")
+    public ResponseEntity<Magasin> getMagasinByCode(@PathVariable String code) {
+        Optional<Magasin> magasin = magasinService.findByCode(code);
+        return magasin.map(ResponseEntity::ok)
+                     .orElse(ResponseEntity.notFound().build());
+    }
+    
+    @GetMapping("/active")
+    public ResponseEntity<List<Magasin>> getActiveMagasins() {
+        List<Magasin> magasins = magasinService.findByIsActive(true);
+        return ResponseEntity.ok(magasins);
+    }
+    
+    @GetMapping("/search")
+    public ResponseEntity<List<Magasin>> searchMagasins(@RequestParam String name) {
+        List<Magasin> magasins = magasinService.searchByName(name);
+        return ResponseEntity.ok(magasins);
+    }
+    
+    @PostMapping
+    public ResponseEntity<Magasin> createMagasin(@Valid @RequestBody Magasin magasin) {
+        try {
+            Magasin savedMagasin = magasinService.save(magasin);
+            return ResponseEntity.ok(savedMagasin);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+    
+    @PutMapping("/{id}")
+    public ResponseEntity<Magasin> updateMagasin(@PathVariable Long id, @Valid @RequestBody Magasin magasin) {
+        Optional<Magasin> existingMagasin = magasinService.findById(id);
+        if (existingMagasin.isPresent()) {
+            magasin.setId(id);
+            Magasin updatedMagasin = magasinService.save(magasin);
+            return ResponseEntity.ok(updatedMagasin);
+        }
+        return ResponseEntity.notFound().build();
+    }
+    
+    @PutMapping("/{id}/toggle-status")
+    public ResponseEntity<Magasin> toggleMagasinStatus(@PathVariable Long id) {
+        try {
+            Magasin magasin = magasinService.toggleStatus(id);
+            return ResponseEntity.ok(magasin);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+    
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteMagasin(@PathVariable Long id) {
+        Optional<Magasin> magasin = magasinService.findById(id);
+        if (magasin.isPresent()) {
+            magasinService.deleteById(id);
+            return ResponseEntity.ok().build();
+        }
+        return ResponseEntity.notFound().build();
+    }
+    
+    @GetMapping("/stats/count-active")
+    public ResponseEntity<Long> getActiveMagasinsCount() {
+        Long count = magasinService.countActiveMagasins();
+        return ResponseEntity.ok(count);
+    }
+}
+```
+
+### ProduitController.java
+```java
+package com.inventory.controller;
+
+import com.inventory.entity.Produit;
+import com.inventory.service.ProduitService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+@RestController
+@RequestMapping("/api/produits")
+@CrossOrigin(origins = "*")
+public class ProduitController {
+    
+    @Autowired
+    private ProduitService produitService;
+    
+    @GetMapping
+    public ResponseEntity<List<Produit>> getAllProduits() {
+        List<Produit> produits = produitService.findAll();
+        return ResponseEntity.ok(produits);
+    }
+    
+    @GetMapping("/{id}")
+    public ResponseEntity<Produit> getProduitById(@PathVariable Long id) {
+        Optional<Produit> produit = produitService.findById(id);
+        return produit.map(ResponseEntity::ok)
+                     .orElse(ResponseEntity.notFound().build());
+    }
+    
+    @GetMapping("/code/{code}")
+    public ResponseEntity<Produit> getProduitByCode(@PathVariable String code) {
+        Optional<Produit> produit = produitService.findByCode(code);
+        return produit.map(ResponseEntity::ok)
+                     .orElse(ResponseEntity.notFound().build());
+    }
+    
+    @GetMapping("/famille/{familleId}")
+    public ResponseEntity<List<Produit>> getProduitsByFamille(@PathVariable Long familleId) {
+        List<Produit> produits = produitService.findByFamilleId(familleId);
+        return ResponseEntity.ok(produits);
+    }
+    
+    @GetMapping("/magasin/{magasinId}")
+    public ResponseEntity<List<Produit>> getProduitsByMagasin(@PathVariable Long magasinId) {
+        List<Produit> produits = produitService.findByMagasinId(magasinId);
+        return ResponseEntity.ok(produits);
+    }
+    
+    @GetMapping("/search")
+    public ResponseEntity<List<Produit>> searchProduits(@RequestParam String name) {
+        List<Produit> produits = produitService.searchByName(name);
+        return ResponseEntity.ok(produits);
+    }
+    
+    @GetMapping("/low-stock")
+    public ResponseEntity<List<Produit>> getProduitsWithLowStock() {
+        List<Produit> produits = produitService.findProduitsWithLowStock();
+        return ResponseEntity.ok(produits);
+    }
+    
+    @GetMapping("/{id}/stock")
+    public ResponseEntity<Map<Long, Integer>> getStockByMagasin(@PathVariable Long id) {
+        Map<Long, Integer> stock = produitService.getStockByMagasin(id);
+        return ResponseEntity.ok(stock);
+    }
+    
+    @GetMapping("/{id}/total-stock")
+    public ResponseEntity<Integer> getTotalStock(@PathVariable Long id) {
+        Integer totalStock = produitService.getTotalStock(id);
+        return ResponseEntity.ok(totalStock);
+    }
+    
+    @PostMapping
+    public ResponseEntity<Produit> createProduit(@Valid @RequestBody Produit produit) {
+        try {
+            Produit savedProduit = produitService.save(produit);
+            return ResponseEntity.ok(savedProduit);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+    
+    @PutMapping("/{id}")
+    public ResponseEntity<Produit> updateProduit(@PathVariable Long id, @Valid @RequestBody Produit produit) {
+        Optional<Produit> existingProduit = produitService.findById(id);
+        if (existingProduit.isPresent()) {
+            produit.setId(id);
+            Produit updatedProduit = produitService.save(produit);
+            return ResponseEntity.ok(updatedProduit);
+        }
+        return ResponseEntity.notFound().build();
+    }
+    
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteProduit(@PathVariable Long id) {
+        Optional<Produit> produit = produitService.findById(id);
+        if (produit.isPresent()) {
+            produitService.deleteById(id);
+            return ResponseEntity.ok().build();
+        }
+        return ResponseEntity.notFound().build();
+    }
+}
+```
+
+### StockController.java
+```java
+package com.inventory.controller;
+
+import com.inventory.entity.StockMagasin;
+import com.inventory.service.StockService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import java.util.List;
+import java.util.Optional;
+
+@RestController
+@RequestMapping("/api/stock")
+@CrossOrigin(origins = "*")
+public class StockController {
+    
+    @Autowired
+    private StockService stockService;
+    
+    @GetMapping
+    public ResponseEntity<List<StockMagasin>> getAllStocks() {
+        List<StockMagasin> stocks = stockService.findAll();
+        return ResponseEntity.ok(stocks);
+    }
+    
+    @GetMapping("/produit/{produitId}")
+    public ResponseEntity<List<StockMagasin>> getStocksByProduit(@PathVariable Long produitId) {
+        List<StockMagasin> stocks = stockService.findByProduitId(produitId);
+        return ResponseEntity.ok(stocks);
+    }
+    
+    @GetMapping("/magasin/{magasinId}")
+    public ResponseEntity<List<StockMagasin>> getStocksByMagasin(@PathVariable Long magasinId) {
+        List<StockMagasin> stocks = stockService.findByMagasinId(magasinId);
+        return ResponseEntity.ok(stocks);
+    }
+    
+    @GetMapping("/produit/{produitId}/magasin/{magasinId}")
+    public ResponseEntity<StockMagasin> getStock(@PathVariable Long produitId, @PathVariable Long magasinId) {
+        Optional<StockMagasin> stock = stockService.findByProduitAndMagasin(produitId, magasinId);
+        return stock.map(ResponseEntity::ok)
+                   .orElse(ResponseEntity.notFound().build());
+    }
+    
+    @GetMapping("/low-stock")
+    public ResponseEntity<List<StockMagasin>> getLowStockItems() {
+        List<StockMagasin> stocks = stockService.findLowStockItems();
+        return ResponseEntity.ok(stocks);
+    }
+    
+    @PutMapping("/produit/{produitId}/magasin/{magasinId}")
+    public ResponseEntity<StockMagasin> updateStock(
+            @PathVariable Long produitId, 
+            @PathVariable Long magasinId,
+            @RequestBody UpdateStockRequest request) {
+        try {
+            StockMagasin stock = stockService.updateStock(produitId, magasinId, request.getQuantity());
+            return ResponseEntity.ok(stock);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+    
+    @PutMapping("/produit/{produitId}/magasin/{magasinId}/adjust")
+    public ResponseEntity<StockMagasin> adjustStock(
+            @PathVariable Long produitId, 
+            @PathVariable Long magasinId,
+            @RequestBody AdjustStockRequest request) {
+        try {
+            StockMagasin stock = stockService.adjustStock(produitId, magasinId, request.getAdjustment());
+            return ResponseEntity.ok(stock);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+    
+    @GetMapping("/produit/{produitId}/total")
+    public ResponseEntity<Integer> getTotalStockForProduit(@PathVariable Long produitId) {
+        Integer totalStock = stockService.getTotalStockForProduit(produitId);
+        return ResponseEntity.ok(totalStock);
+    }
+    
+    // Classes pour les requêtes
+    public static class UpdateStockRequest {
+        private Integer quantity;
+        
+        public Integer getQuantity() { return quantity; }
+        public void setQuantity(Integer quantity) { this.quantity = quantity; }
+    }
+    
+    public static class AdjustStockRequest {
+        private Integer adjustment;
+        
+        public Integer getAdjustment() { return adjustment; }
+        public void setAdjustment(Integer adjustment) { this.adjustment = adjustment; }
+    }
+}
+```
+
+## 10. DONNÉES INITIALES - data.sql
+```sql
+-- Insertion des données de test
+INSERT INTO familles (code, name, description) VALUES 
+('FAM001', 'Électronique', 'Produits électroniques'),
+('FAM002', 'Alimentaire', 'Produits alimentaires'),
+('FAM003', 'Textile', 'Vêtements et accessoires');
+
+INSERT INTO sous_familles (code, name, description, famille_id) VALUES 
+('SF001', 'Smartphones', 'Téléphones intelligents', 1),
+('SF002', 'Ordinateurs', 'Ordinateurs portables et de bureau', 1),
+('SF003', 'Légumes', 'Légumes frais', 2),
+('SF004', 'Fruits', 'Fruits frais', 2);
+
+INSERT INTO magasins (code, name, address, manager, is_active) VALUES 
+('MAG001', 'Magasin Central', '123 Rue Principale, Paris', 'Jean Dupont', true),
+('MAG002', 'Dépôt Nord', '45 Avenue du Nord, Lille', 'Marie Martin', true),
+('MAG003', 'Dépôt Sud', '78 Boulevard du Sud, Marseille', 'Pierre Durand', true);
+
+INSERT INTO tiers (code, name, email, phone, address, type, status, outstanding_amount, initials, created_at) VALUES 
+('CLI001', 'Entreprise ABC', 'contact@abc.com', '0123456789', '1 Rue Commerce, Paris', 'CLIENT', 'ACTIVE', 0, 'EA', NOW()),
+('CLI002', 'Société XYZ', 'info@xyz.com', '0987654321', '2 Avenue Business, Lyon', 'CLIENT', 'ACTIVE', 500, 'SX', NOW()),
+('FOU001', 'Fournisseur Tech', 'vente@tech.com', '0147258369', '3 Boulevard Tech, Toulouse', 'FOURNISSEUR', 'ACTIVE', 0, 'FT', NOW());
+
+INSERT INTO produits (code, name, description, famille_id, sous_famille_id, prix_achat, prix_vente, stock_min, stock_max) VALUES 
+('PROD001', 'iPhone 15', 'Smartphone Apple iPhone 15', 1, 1, 800.00, 1200.00, 5, 50),
+('PROD002', 'MacBook Pro', 'Ordinateur portable Apple', 1, 2, 1500.00, 2500.00, 2, 20),
+('PROD003', 'Tomates', 'Tomates fraîches bio', 2, 3, 2.50, 4.00, 10, 100);
+
+INSERT INTO stock_magasin (produit_id, magasin_id, quantite, last_updated) VALUES 
+(1, 1, 25, NOW()),
+(1, 2, 15, NOW()),
+(1, 3, 10, NOW()),
+(2, 1, 8, NOW()),
+(2, 2, 5, NOW()),
+(3, 1, 50, NOW()),
+(3, 3, 30, NOW());
+```
+
+## 11. INSTRUCTIONS DÉMARRAGE
+
+### Prérequis:
+1. Java 17 ou plus récent
+2. Maven 3.6+
+3. PostgreSQL 12+
+
+### Installation:
+1. Créer la base de données PostgreSQL:
+```sql
+CREATE DATABASE inventory_db;
+CREATE USER inventory_user WITH PASSWORD 'inventory_password';
+GRANT ALL PRIVILEGES ON DATABASE inventory_db TO inventory_user;
+```
+
+2. Cloner et compiler le projet:
+```bash
+git clone <repository-url>
+cd inventory-backend
+mvn clean install
+```
+
+3. Modifier application.yml avec vos paramètres de base de données
+
+4. Démarrer l'application:
+```bash
+mvn spring-boot:run
+```
+
+### API Endpoints disponibles:
+- GET /api/magasins - Liste tous les magasins
+- POST /api/magasins - Créer un nouveau magasin
+- GET /api/produits - Liste tous les produits
+- GET /api/produits/{id}/stock - Stock par magasin pour un produit
+- GET /api/stock/low-stock - Produits avec stock faible
+- PUT /api/stock/produit/{produitId}/magasin/{magasinId} - Mettre à jour le stock
+
+### Tests avec Postman:
+Base URL: http://localhost:8080/api
+
+Exemples de requêtes:
+```
+GET http://localhost:8080/api/magasins
+GET http://localhost:8080/api/produits
+GET http://localhost:8080/api/stock/low-stock
+POST http://localhost:8080/api/magasins
+Content-Type: application/json
+{
+  "code": "MAG004",
+  "name": "Nouveau Magasin",
+  "address": "123 Rue Test",
+  "manager": "Test Manager",
+  "isActive": true
+}
+```
+
+Ce backend Spring Boot fournit toutes les fonctionnalités nécessaires pour votre système de gestion d'inventaire avec une API REST complète.
